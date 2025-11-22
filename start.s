@@ -7,6 +7,7 @@
 
 # ----- Main ----- 
 main:
+    jal displayLettres
     jal initPartie
     jal displayGrille
     #jal simulationJeu
@@ -92,7 +93,25 @@ displayGrille:
 # Regitres utilises : $t0, $v0, $a0
 
 displayLettres:
+#Fait par Yanis
+    li $a0, 32          # 32 = code ascii du caractère ' '
+    li $v0, 11          # Fonction pour afficher un caractère
+    syscall
+    li $t0, 65          # 65 = code ascii de 'A'
+boucle_lettres:
+    bgt $t0, 74, fin_displayLettres  # Pour arrêter après 'J'
+    move $a0, $t0       # Pour Charger la lettre dans $a0
+    li $v0, 11     
+    syscall
+    li $a0, 32          
+    li $v0, 11          
+    syscall
+    addi $t0, $t0, 1    # Pour aller à la lettre suivante
+    j boucle_lettres
 
+fin_displayLettres:
+    jr $ra
+    
 # ----- Fonction addNewLine -----  
 # Objectif : fait un retour a la ligne a l'ecran
 # Registres utilises : $v0, $a0
