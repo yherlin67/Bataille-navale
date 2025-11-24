@@ -241,7 +241,7 @@ verifPlaceHorizontale:
 # Registres utilises : $v0, $a0, $a1, $s[0-4], $t[0-4]
 
 placeVerticale:
-
+#salut
 
 # ----- Fontion verifPlaceVerticale -----
 # Objectif : verifie si le placement (verticale) est possible.
