@@ -194,7 +194,7 @@ getAleatoire:
 # ----- Fontion setShip -----
 # Objectif : place un bateau de taille donné.
 #   $a0 represente la taille en nombre de case du bateau à placer
-#   $a1 represente le caraètre pour représenter le bateau
+#   $a1 represente le caractère pour représenter le bateau
 # Registres utilises : $a0, $a1, $s[0-4], $t[0-4]
 
 setShip:
@@ -223,11 +223,14 @@ setShip:
 # Registres utilises : $v0, $a0, $a1, $s[0-4], $t[0-4]
 
 placeHorizontale:
+<<<<<<< HEAD
     #Fait par Baptiste
     li $t0, 0
     move $v0, $t0
     li $t0, 0
     li $a1, 2        #taille navire
+=======
+>>>>>>> a6c4a4e5f067861f78d80ad08c99c6778825773b
     
     bne $t0, $a1, for
     
@@ -291,7 +294,13 @@ verifPlaceHorizontale:
 # Registres utilises : $v0, $a0, $a1, $s[0-4], $t[0-4]
 
 placeVerticale:
-
+#salut
+    li $a1 10
+    jal getAleatoire
+    move $s2 $a0
+    sub $a1 $s0 10
+    jal getAleatoire
+    move $s3 $a0
 
 # ----- Fontion verifPlaceVerticale -----
 # Objectif : verifie si le placement (verticale) est possible.
