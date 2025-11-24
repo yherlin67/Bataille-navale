@@ -132,18 +132,18 @@ addNewLine:
 # Paramètre : $a1 (Ligne en cours : res du modulo + 1)
 
 addLineCount:
-#Fait par Baptiste
+    #Fait par Baptiste
     jal addNewLine
-    li $t0, 0          # compteur de ligne 
+    li $t0, 0          # compteur de ligne
     li $a1, 11         # diviseur pour le modulo
 
 boucleInt:
     bge $t0, 10, finDisplayLigne  # stop après 10 lignes
 
-    move $a0, $t0                 
+    move $a0, $t0
     jal getModulo                 # v0 = t0 mod 11
     
-    addi $a0, $v0, 1              # ligne affichée = res du modulo + 1
+    addi $a0, $v0, 1              # ligne affichée = res modulo + 1
     li $v0, 1                     # print int
     syscall
 
@@ -154,6 +154,7 @@ boucleInt:
 
 finDisplayLigne:
     jr $ra
+
 
 
 # ----- Fonction getModulo ----- 
@@ -222,8 +223,34 @@ setShip:
 # Registres utilises : $v0, $a0, $a1, $s[0-4], $t[0-4]
 
 placeHorizontale:
-    #bonjour
+    #Fait par Baptiste
+    li $t0, 0
+    move $v0, $t0
+    li $t0, 0
+    li $a1, 2        #taille navire
     
+    bne $t0, $a1, for
+    
+    
+    for:
+        bne $v0, 1, continue
+        
+        continue:
+            addi $t0, $t0, 1 
+            jal getAleatoire
+            move $s2, $a0
+    
+            jal getAleatoire
+            move $s3, $a0
+    
+            move $s0, $a1
+    
+            j verifPlaceHorizontale
+    
+    
+    
+    
+
 
 # ----- Fontion verifPlaceHorizontale -----
 # Objectif : verifie si le placement (horizontale) est possible.
@@ -234,6 +261,28 @@ placeHorizontale:
 # Registres utilises : $v0, $t[0-4], $s0, $s2, $s3
 
 verifPlaceHorizontale:
+    #Fait par Baptiste
+    
+    #calcul de la case : ligne * 10 + colonne
+    li $t1, 10
+    mult $s2, $t1
+    mflo $s1
+    add $s1, $s1, $s3
+    
+    la  $t2, grille
+    add $t1, $t1, $s1
+    lb  $t3, 0($t1)
+    
+    li  $t4, '.'
+    beq $t3, $t4, estBon
+    li $v0, 1
+    move $a1, $s0
+    
+    
+    estBon:
+        li $v0, 0
+        move $a1, $s0
+        j placeHorizontale
 
 
 # ----- Fontion placeVerticale -----
