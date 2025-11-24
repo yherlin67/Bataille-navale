@@ -8,6 +8,7 @@
 # ----- Main ----- 
 main:
     jal displayLettres
+    jal addLineCount
     jal initPartie
     jal displayGrille
     #jal simulationJeu
@@ -97,6 +98,9 @@ displayLettres:
     li $a0, 32          # 32 = code ascii du caractère ' '
     li $v0, 11          # Fonction pour afficher un caractère
     syscall
+    li $a0, 32          # 32 = code ascii du caractère ' '
+    li $v0, 11          # Fonction pour afficher un caractère
+    syscall
     li $t0, 65          # 65 = code ascii de 'A'
 boucle_lettres:
     bgt $t0, 74, fin_displayLettres  # Pour arrêter après 'J'
@@ -128,6 +132,29 @@ addNewLine:
 # Paramètre : $a1 (Ligne en cours : res du modulo + 1)
 
 addLineCount:
+#Fait par Baptiste
+    jal addNewLine
+    li $t0, 0          # compteur de ligne 
+    li $a1, 11         # diviseur pour le modulo
+
+boucleInt:
+    bge $t0, 10, finDisplayLigne  # stop après 10 lignes
+
+    move $a0, $t0                 
+    jal getModulo                 # v0 = t0 mod 11
+    
+    addi $a0, $v0, 1              # ligne affichée = res du modulo + 1
+    li $v0, 1                     # print int
+    syscall
+
+    jal addNewLine
+
+    addi $t0, $t0, 1              # t0++
+    j boucleInt
+
+finDisplayLigne:
+    jr $ra
+
 
 # ----- Fonction getModulo ----- 
 # Objectif : Fait le modulo (a mod b)
