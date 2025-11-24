@@ -1,6 +1,8 @@
 # ===== Section donnees =====
 .data 
     grille:     .space 100 #Grille de char de 10x10 soit 100 octet
+    nb_coups_but:   .word
+    nb_coups:       .word
     
 # ===== Section code =====  
 .text
@@ -223,14 +225,14 @@ setShip:
 # Registres utilises : $v0, $a0, $a1, $s[0-4], $t[0-4]
 
 placeHorizontale:
-<<<<<<< HEAD
+#<<<<<<< HEAD
     #Fait par Baptiste
     li $t0, 0
     move $v0, $t0
     li $t0, 0
     li $a1, 2        #taille navire
-=======
->>>>>>> a6c4a4e5f067861f78d80ad08c99c6778825773b
+#=======
+#>>>>>>> a6c4a4e5f067861f78d80ad08c99c6778825773b
     
     bne $t0, $a1, for
     
@@ -319,6 +321,44 @@ verifPlaceVerticale:
 
 simulationJeu:
 
+    la $s0 nb_coups_but
+    li $s0, 0 #initialisation de nb_coups_but à 0
+    
+    la $s1 nb_coups
+    li $s1, 0  #initialisation de nb_coups à 0
+    
+    bgt $s0, 17, exit #Tant que nb_coups_but inférieur à 17 :
+    
+    li $a1, 10
+    jal getAleatoire
+    move $s2, $a0  #stockage du résultat de getAleatoire dans $s2 (ligne) 
+    
+    li $a1, 10
+    jal get Aleatoire
+    move $s3, $a0  #stockage du résultat de getAleatoire dans $s3 (colonne)
+    
+    #calcul de la case : ligne * 10 + colonne
+    li $t0, 10
+    mult $s2, $t0
+    mflo $t1
+    add $t1, $t1, $s3
+    
+    la  $t2, grille
+    add $t2, $t2, $t1
+    lb  $t3, 0($t2)
+    
+    addi $s1, $s1, 1 #Incrémente nb_coups de 1
+    
+    beq $t3 #est un navire
+    
+    addi $s0, $s0, 1  #Incrémente nb_coups_but de 1
+    
+    move $a0, $s1
+    move $a1, $s2 #Transmition des coordonnées générées en arguments de traque
+    jal traque
+    
+    j simulationJeu
+    
 
 # ----- Fontion traque -----     
 # Objectif : Vérifie la présence d'un navire et le traque de manière récursive
