@@ -222,6 +222,7 @@ setShip:
 # Registres utilises : $v0, $a0, $a1, $s[0-4], $t[0-4]
 
 placeHorizontale:
+    #bonjour
     
 
 # ----- Fontion verifPlaceHorizontale -----
