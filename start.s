@@ -59,7 +59,7 @@ initGrille:
     boucle_initGrille:
         bge     $t1, 100, end_initGrille # Si $t1 est plus grand ou egal a 100 alors branchement a end_boucle_initGrille
             add     $t2, $t0, $t1   # $t0 + $t1 -> $t2 ($t0 l'adresse du tableau et $t1 la position dans le tableau)
-            sb		$t3, 0($t2)		# On place la valeur de $t3 à l'adresse contenue dans $t2
+            sb      $t3, 0($t2)	# On place la valeur de $t3 à l'adresse contenue dans $t2
             addi    $t1, $t1, 1     # $t1 += 1 (On augemente le compteur)
         j boucle_initGrille
     end_initGrille:
@@ -97,6 +97,7 @@ displayGrille:
 
 displayLettres:
 #Fait par Yanis
+
     li $a0, 32          # 32 = code ascii du caractère ' '
     li $v0, 11          # Fonction pour afficher un caractère
     syscall
@@ -135,6 +136,9 @@ addNewLine:
 
 addLineCount:
     #Fait par Baptiste
+    add $sp, $sp, -4        # Sauvegarde de la reference du dernier jump
+    sw  $ra, 0($sp)
+    
     jal addNewLine
     li $t0, 0          # compteur de ligne
     li $a1, 11         # diviseur pour le modulo
@@ -155,6 +159,8 @@ boucleInt:
     j boucleInt
 
 finDisplayLigne:
+    lw $ra, 0($sp)                 # On recharge la reference 
+    add $sp, $sp, 4                 # du dernier jump
     jr $ra
 
 
@@ -203,13 +209,13 @@ setShip:
     sub     $sp, $sp, 4
     sw      $ra, 0($sp)     #On sauvegarde l'adresse de retour
 
-    move 	$s0, $a0		# On recopie la taille dans $s0
+    move    $s0, $a0	    # On recopie la taille dans $s0
     move    $s4, $a1        # On recopie le caractère du bateau
     try_setShip:
         #Choix de l'axe (horizontale ou verticale)
-        li      $a1, 2          # Définition de la borne surpérieur (Resultat possbile : 0 ou 1)
+        li $a1, 2          # Définition de la borne surpérieur (Resultat possbile : 0 ou 1)
         jal getAleatoire        # Saut pour obtenir une valeur aléatoire
-        move 	$s1, $a0		# On copie le résultat dans $s1
+        move $s1, $a0		# On copie le résultat dans $s1
         # Placement en fonction de l'axe
         beq     $s1, 1, placeVerticale  # Si la valuer est 1 alors le bateau sera placer verticalement
         j       placeHorizontale        # Si la valuer est 0 alors le bateau sera placer horizontalement
@@ -321,27 +327,55 @@ verifPlaceVerticale:
 
 simulationJeu:
 
-    la $s0 nb_coups_but
+    #On fait de la place sur le tas pour les registres sauvegardés
+    li $a0 4      #on demande 12 octets
+    li $v0 9      #9 pour appel système sbrk
+    syscall
+    sw $v0 12($sp) #$v0 contient l’adresse de la mémoire réservée dans le tas
+    
+    la $s0, nb_coups_but
     li $s0, 0 #initialisation de nb_coups_but à 0
     
     la $s1 nb_coups
     li $s1, 0  #initialisation de nb_coups à 0
     
-    bgt $s0, 17, exit #Tant que nb_coups_but inférieur à 17 :
+boucle_simulation:
+    
+    bgt $s0, 17, exit #Tant que nb_coups_but inférieur ou égal 17 :
     
     li $a1, 10
     jal getAleatoire
     move $s2, $a0  #stockage du résultat de getAleatoire dans $s2 (ligne) 
     
     li $a1, 10
-    jal get Aleatoire
+    jal getAleatoire
     move $s3, $a0  #stockage du résultat de getAleatoire dans $s3 (colonne)
+    
+    #stockage du contenus des registres sauvegardés sur le tas
+    sw $s0, 0($v0)    
+    sw $s1, 4($v0)     
+    sw $s2, 8($v0)     
+    
+    jal traque
+    j boucle_simulation
+    
+    
+    
+    
+
+# ----- Fontion traque -----     
+# Objectif : Vérifie la présence d'un navire et le traque de manière récursive
+# Registres utilises : $t[8-9], $s[0-3]
+
+traque:
+    add $sp, $sp, -4        # Sauvegarde de la reference du dernier jump
+    sw  $ra, 0($sp)
     
     #calcul de la case : ligne * 10 + colonne
     li $t0, 10
     mult $s2, $t0
     mflo $t1
-    add $t1, $t1, $s3
+    add lo, lo, $s3
     
     la  $t2, grille
     add $t2, $t2, $t1
@@ -353,19 +387,37 @@ simulationJeu:
     
     addi $s0, $s0, 1  #Incrémente nb_coups_but de 1
     
-    move $a0, $s1
-    move $a1, $s2 #Transmition des coordonnées générées en arguments de traque
-    jal traque
-    
-    j simulationJeu
-    
+retour_chasse:
+    lw $ra, 0($sp)                 # On recharge la reference 
+    add $sp, $sp, 4                 # du dernier jump
+    jr $ra
 
-# ----- Fontion traque -----     
-# Objectif : Vérifie la présence d'un navire et le traque de manière récursive
-# Registres utilises : $t[8-9], $s[0-3]
 
-traque:
 
+#   Fonction traque (grille, ligne, colonne):
+
+ #       position = ligne * nombre_de_colonnes + colonne 
+ #      case = grille[position]
+        
+  #      Si case == '~' ou case == 'X' :
+   #         Retourner
+        
+    #    nb_coup += 1 
+
+     #   Si case == '.' :
+      #      case = '~'
+       #     Retourner
+        
+        #Sinon 
+         #   nb_coup_but += 1 
+          #  case = 'X'
+
+          #  traque(grille, ligne-1, colonne)
+          #  traque(grille, ligne, colonne-1)
+          #  traque(grille, ligne+1, colonne)
+          #  traque(grille, ligne, colonne+1)
+
+        #Retourner
 
 exit: 
     li $v0, 10  #Chargement appel systeme 10 (Sortie)
