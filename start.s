@@ -13,8 +13,8 @@ main:
     jal addLineCount
     jal initPartie
     jal displayGrille
-    #jal simulationJeu
-    #jal displayGrille
+    jal simulationJeu
+    jal displayGrille
     j   exit 
 
 # ----- Fonctions -----
@@ -231,35 +231,20 @@ setShip:
 # Registres utilises : $v0, $a0, $a1, $s[0-4], $t[0-4]
 
 placeHorizontale:
-#<<<<<<< HEAD
-    #Fait par Baptiste
+#Fait par Baptiste
     li $t0, 0
     move $v0, $t0
-    li $t0, 0
-    li $a1, 2        #taille navire
-#=======
-#>>>>>>> a6c4a4e5f067861f78d80ad08c99c6778825773b
+    li $a1, 11        #taille navire
+
+    jal getAleatoire
+    move $s2, $a0
     
-    bne $t0, $a1, for
+    jal getAleatoire
+    move $s3, $a0
     
+    move $s0, $a1
     
-    for:
-        bne $v0, 1, continue
-        
-        continue:
-            addi $t0, $t0, 1 
-            jal getAleatoire
-            move $s2, $a0
-    
-            jal getAleatoire
-            move $s3, $a0
-    
-            move $s0, $a1
-    
-            j verifPlaceHorizontale
-    
-    
-    
+    j verifPlaceHorizontale
     
 
 
@@ -272,28 +257,46 @@ placeHorizontale:
 # Registres utilises : $v0, $t[0-4], $s0, $s2, $s3
 
 verifPlaceHorizontale:
-    #Fait par Baptiste
-    
-    #calcul de la case : ligne * 10 + colonne
-    li $t1, 10
+#Fait par Baptiste
+# $s0 = taille du bateau
+# $s2 = ligne
+# $s3 = colonne
+
+    li   $t1, 10
     mult $s2, $t1
-    mflo $s1
-    add $s1, $s1, $s3
-    
-    la  $t2, grille
-    add $t1, $t1, $s1
-    lb  $t3, 0($t1)
-    
-    li  $t4, '.'
-    beq $t3, $t4, estBon
-    li $v0, 1
-    move $a1, $s0
-    
-    
-    estBon:
+    mflo $t2
+    add  $t2, $t2, $s3     # case
+
+    la   $t3, grille       # adresse tableau pour recup valeur
+    li   $t4, 0            # compteur
+
+    add  $t0, $s3, $s0     # colonne + taille ! important pour tester si l'on sors du tab
+    bgt  $t0, 10, erreurH   # test dépassement (colone choisit > a 10)
+
+    verifH:
+        beq  $t4, $s0, bonH
+
+        add  $t1, $t2, $t4     # test du suivant indice + i
+        add  $t1, $t1, $t3     # test de la case
+
+        lb   $t0, 0($t1)       # case
+        li   $t1, '.'          # valeur attendue
+        bne  $t0, $t1, erreurH  # test si la case est vide
+
+        addi $t4, $t4, 1       # on test avec un autre i
+        j    verifH
+
+
+    bonH:
         li $v0, 0
-        move $a1, $s0
-        j placeHorizontale
+        j finH
+
+    erreurH:
+        li $v0, 1
+
+
+    finH:
+        jr $ra
 
 
 # ----- Fontion placeVerticale -----
@@ -302,14 +305,20 @@ verifPlaceHorizontale:
 # Registres utilises : $v0, $a0, $a1, $s[0-4], $t[0-4]
 
 placeVerticale:
-#salut
-    li $a1 10
-    jal getAleatoire
-    move $s2 $a0
-    sub $a1 $s0 10
-    jal getAleatoire
-    move $s3 $a0
+#Fait par Baptiste et Yanis
+    li $t0, 0
+    move $v0, $t0
+    li $a1, 11          # taille
 
+    jal getAleatoire
+    move $s3, $a0       # colonne
+
+    jal getAleatoire
+    move $s2, $a0       # ligne
+
+    move $s0, $a1       # taille
+
+    j verifPlaceVerticale
 # ----- Fontion verifPlaceVerticale -----
 # Objectif : verifie si le placement (verticale) est possible.
 #   $s0 contient la taille du navire
@@ -319,7 +328,42 @@ placeVerticale:
 # Registres utilises : $v0, $t[0-4], $s0, $s2, $s3
 
 verifPlaceVerticale:
+#Fait par Baptiste
 
+    li   $t1, 10
+    mult $s2, $t1
+    mflo $t2
+    add  $t2, $t2, $s3      # case
+
+    la   $t3, grille        # adresse du tab
+    li   $t4, 0             # compteur
+
+    add  $t0, $s2, $s0      # ligne + taille permet a la ligne suivante de tester si l'on sors
+    bgt  $t0, 10, erreurV
+
+    verifV:
+        beq  $t4, $s0, bonV
+
+        mul  $t1, $t4, 10    # permet de monter d'une case
+        add  $t1, $t1, $t2   # index
+        add  $t1, $t1, $t3   # adresse case suivante
+
+        lb   $t0, 0($t1)     # case
+        li   $t1, '.'        # test si case vide
+        bne  $t0, $t1, erreurV
+
+        addi $t4, $t4, 1
+        j    verifV
+
+    bonV:
+        li $v0, 0
+        j finV
+
+    erreurV:
+        li $v0, 1
+
+    finV:
+        jr $ra
 
 # ----- Fonction simulationJeu -----
 # Objectif : Simule une partie avec une grille déjà généré.
@@ -375,7 +419,7 @@ traque:
     li $t0, 10
     mult $s2, $t0
     mflo $t1
-    add lo, lo, $s3
+    add $t1, $t1, $s3
     
     la  $t2, grille
     add $t2, $t2, $t1
@@ -383,7 +427,7 @@ traque:
     
     addi $s1, $s1, 1 #Incrémente nb_coups de 1
     
-    beq $t3 #est un navire
+    #beq $t3 #est un navire
     
     addi $s0, $s0, 1  #Incrémente nb_coups_but de 1
     
