@@ -326,15 +326,9 @@ verifPlaceVerticale:
 # Registres utilises : $s[0-3]
 
 simulationJeu:
-
-    #On fait de la place sur le tas pour les registres sauvegardés
-    li $a0 4      #on demande 12 octets
-    li $v0 9      #9 pour appel système sbrk
-    syscall
-    sw $v0 12($sp) #$v0 contient l’adresse de la mémoire réservée dans le tas
     
     la $s0, nb_coups_but
-    li $s0, 0 #initialisation de nb_coups_but à 0
+    sw $0, 0($s0) #initialisation de nb_coups_but à 0
     
     la $s1 nb_coups
     li $s1, 0  #initialisation de nb_coups à 0
@@ -349,20 +343,11 @@ boucle_simulation:
     
     li $a1, 10
     jal getAleatoire
-    move $s3, $a0  #stockage du résultat de getAleatoire dans $s3 (colonne)
-    
-    #stockage du contenus des registres sauvegardés sur le tas
-    sw $s0, 0($v0)    
-    sw $s1, 4($v0)     
-    sw $s2, 8($v0)     
+    move $s3, $a0  #stockage du résultat de getAleatoire dans $s3 (colonne)    
     
     jal traque
     j boucle_simulation
     
-    
-    
-    
-
 # ----- Fontion traque -----     
 # Objectif : Vérifie la présence d'un navire et le traque de manière récursive
 # Registres utilises : $t[8-9], $s[0-3]
@@ -371,25 +356,44 @@ traque:
     add $sp, $sp, -4        # Sauvegarde de la reference du dernier jump
     sw  $ra, 0($sp)
     
-    #calcul de la case : ligne * 10 + colonne
-    li $t0, 10
-    mult $s2, $t0
-    mflo $t1
-    add lo, lo, $s3
+    li $t8, 10
+    mult $s2, $t8 #calcul de la case : ligne * 10 + colonne
+    mflo $t9
+    add $t9, $t9, $s3
     
-    la  $t2, grille
-    add $t2, $t2, $t1
-    lb  $t3, 0($t2)
+    la  $t8, grille
+    add $t8, $t8, $t9
+    lb  $t9, 0($t8)
+    
+    beq $t9, '~', retour_chasse
     
     addi $s1, $s1, 1 #Incrémente nb_coups de 1
+    beq $t9, '.', tir_loupe
     
-    beq $t3 #est un navire
+    addi $s0, $s0, 1 #Incrémente nb_coups_buts de 1
     
+    li $t9, 'X';
+    sb $t9, 0($t8)
+    sub $s2, $s2, 1
+    jal traque
+    sub $s3, $s3, 1
+    jal traque
+    add $s2, $s2, 1
+    jal traque
+    add $s3, $s3, 1
+    jal traque
+      
+tir_loupe:
+    li $t9, '~';
+    sb $t9, 0($t8)
+    j retour_chasse
+    
+     
     addi $s0, $s0, 1  #Incrémente nb_coups_but de 1
     
 retour_chasse:
-    lw $ra, 0($sp)                 # On recharge la reference 
-    add $sp, $sp, 4                 # du dernier jump
+    lw $ra, 0($sp)
+    add $sp, $sp, 4     # On rétablie l'adresse de retour
     jr $ra
 
 
