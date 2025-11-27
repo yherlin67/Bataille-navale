@@ -1,8 +1,8 @@
 # ===== Section donnees =====
 .data 
     grille:     .space 100 #Grille de char de 10x10 soit 100 octet
-    nb_coups_but:   .word
-    nb_coups:       .word
+    nb_coups_but:   .word 0
+    nb_coups:       .word 0
     
 # ===== Section code =====  
 .text
@@ -371,10 +371,10 @@ verifPlaceVerticale:
 
 simulationJeu:
     
-    la $s0, nb_coups_but
-    sw $0, 0($s0) #initialisation de nb_coups_but à 0
+    lw $s0, nb_coups_but
+    li $s0, 0 #initialisation de nb_coups_but à 0
     
-    la $s1 nb_coups
+    lw $s1 nb_coups
     li $s1, 0  #initialisation de nb_coups à 0
     
 boucle_simulation:
@@ -400,18 +400,18 @@ traque:
     add $sp, $sp, -4        # Sauvegarde de la reference du dernier jump
     sw  $ra, 0($sp)
     
-<<<<<<< HEAD
+#<<<<<<< HEAD
     #calcul de la case : ligne * 10 + colonne
     li $t0, 10
     mult $s2, $t0
     mflo $t1
     add $t1, $t1, $s3
-=======
+#=======
     li $t8, 10
     mult $s2, $t8 #calcul de la case : ligne * 10 + colonne
     mflo $t9
     add $t9, $t9, $s3
->>>>>>> 1400cbbbc5c423408ce1ff43d6abffcf7c80c476
+#>>>>>>> 1400cbbbc5c423408ce1ff43d6abffcf7c80c476
     
     la  $t8, grille
     add $t8, $t8, $t9
@@ -422,13 +422,13 @@ traque:
     addi $s1, $s1, 1 #Incrémente nb_coups de 1
     beq $t9, '.', tir_loupe
     
-<<<<<<< HEAD
+#<<<<<<< HEAD
     #beq $t3 #est un navire
-=======
+#=======
     addi $s0, $s0, 1 #Incrémente nb_coups_buts de 1
->>>>>>> 1400cbbbc5c423408ce1ff43d6abffcf7c80c476
+#>>>>>>> 1400cbbbc5c423408ce1ff43d6abffcf7c80c476
     
-    li $t9, 'X';
+    li $t9, 'X'
     sb $t9, 0($t8)
     sub $s2, $s2, 1
     jal traque
@@ -440,7 +440,7 @@ traque:
     jal traque
       
 tir_loupe:
-    li $t9, '~';
+    li $t9, '~'
     sb $t9, 0($t8)
     j retour_chasse
     
