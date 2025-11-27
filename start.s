@@ -9,8 +9,7 @@
 
 # ----- Main ----- 
 main:
-    jal displayLettres
-    jal addLineCount
+   
     jal initPartie
     jal displayGrille
     jal simulationJeu
@@ -58,6 +57,7 @@ initGrille:
     li      $t3, 46         # Charge la valeur ASCII de '.'
     boucle_initGrille:
         bge     $t1, 100, end_initGrille # Si $t1 est plus grand ou egal a 100 alors branchement a end_boucle_initGrille
+            
             add     $t2, $t0, $t1   # $t0 + $t1 -> $t2 ($t0 l'adresse du tableau et $t1 la position dans le tableau)
             sb      $t3, 0($t2)	# On place la valeur de $t3 à l'adresse contenue dans $t2
             addi    $t1, $t1, 1     # $t1 += 1 (On augemente le compteur)
@@ -72,19 +72,23 @@ initGrille:
 displayGrille:
     add     $sp, $sp, -4        # Sauvegarde de la reference du dernier jump
     sw      $ra, 0($sp)
-    
+    jal displayLettres
+    jal addNewLine
     la      $t0, grille     #Charge l'adresse de la grille dans $t0
     li      $t1, 0          #Initialisation du compteur de boucle dans $t1
+    li      $t3, 10         #Compteur de colonnes
     boucle_displayGrille:
         bge     $t1, 100, end_displayGrille     # Si $t1 est plus grand ou egal a 100 alors branchement a end_displayGrille
-        
+        beq     $t3, 10,  addLineCount          
             add     $t2, $t0, $t1           # $t0 + $t1 -> $t2 ($t0 l'adresse du tableau et $t1 la position dans le tableau)
             lb      $a0, ($t2)              # load byte at $t2(adress) in $a0
             li      $v0, 11                 # code pour l'affichage d'un caractère (char)
             syscall
-
             addi    $t1, $t1, 1            # $t1 += 1;
+            addi    $t3, $t3, 1            # $t3 += 1;
+            move    $a1, $t1
         j boucle_displayGrille
+    
     end_displayGrille:
         jal     addNewLine
         lw      $ra, 0($sp)                 # On recharge la reference 
@@ -136,34 +140,52 @@ addNewLine:
 
 addLineCount:
     #Fait par Baptiste
-    add $sp, $sp, -4        # Sauvegarde de la reference du dernier jump
-    sw  $ra, 0($sp)
     
-    jal addNewLine
-    li $t0, 0          # compteur de ligne
-    li $a1, 11         # diviseur pour le modulo
+    li $t3, 0
 
-boucleInt:
-    bge $t0, 10, finDisplayLigne  # stop après 10 lignes
+    jal     addNewLine      # retour à la ligne
 
-    move $a0, $t0
-    jal getModulo                 # v0 = t0 mod 11
-    
-    addi $a0, $v0, 1              # ligne affichée = res modulo + 1
-    li $v0, 1                     # print int
+    move    $a0, $a1        # préparer a pour getModulo (a0 = position)
+    li      $a1, 10         
+    jal     getModulo      
+
+    move    $a0, $v0        # ligne = quotient
+    addi    $a0, $a0, 1     # ligne affichée = quotient + 1
+    li      $v0, 1          # print_int
     syscall
 
-    jal addNewLine
+    j boucle_displayGrille
+    
+#addLineCount:
+    #Fait par Baptiste
+ #   add $sp, $sp, -4        # Sauvegarde de la reference du dernier jump
+  #  sw  $ra, 0($sp)
+    
+   # li $t3, 0
+    
+    #jal addNewLine
+    #li $t0, 0          # compteur de ligne
+    #li $a1, 11         # diviseur pour le modulo
 
-    addi $t0, $t0, 1              # t0++
-    j boucleInt
+#boucleInt:
+    #bge $t0, 10, finDisplayLigne  # stop après 10 lignes
 
-finDisplayLigne:
-    lw $ra, 0($sp)                 # On recharge la reference 
-    add $sp, $sp, 4                 # du dernier jump
-    jr $ra
+    #move $a0, $t0
+    #jal getModulo                 # v0 = t0 mod 11
+    
+    #addi $a0, $v0, 1              # ligne affichée = res modulo + 1
+    #li $v0, 1                     # print int
+    #syscall
 
+    #jal addNewLine
 
+    #addi $t0, $t0, 1              # t0++
+    #j boucleInt
+
+#finDisplayLigne:
+    #lw $ra, 0($sp)                 # On recharge la reference 
+    #add $sp, $sp, 4                 # du dernier jump
+    #jr $ra
 
 # ----- Fonction getModulo ----- 
 # Objectif : Fait le modulo (a mod b)
@@ -270,7 +292,7 @@ verifPlaceHorizontale:
     la   $t3, grille       # adresse tableau pour recup valeur
     li   $t4, 0            # compteur
 
-    add  $t0, $s3, $s0     # colonne + taille ! important pour tester si l'on sors du tab
+    add  $t0, $s3, $s0     # colonne + taille ! important pour tester si on sors du tab
     bgt  $t0, 10, erreurH   # test dépassement (colone choisit > a 10)
 
     verifH:
